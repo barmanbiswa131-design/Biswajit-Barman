@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BiswaTube</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif}
+header{position:sticky;top:0;background:#111;padding:18px;z-index:2}h1{margin:0 0 14px;font-size:28px}
+.row{display:flex;gap:8px}.row input{flex:1;padding:14px;border:0;border-radius:8px;background:#292929;color:#fff;font-size:16px}.row button{padding:0 18px;border:0;border-radius:8px;background:#e00;color:#fff;font-weight:bold}
+main{padding:16px;max-width:900px;margin:auto}.msg{padding:30px 5px;color:#bbb}.card{background:#181818;border-radius:12px;margin:0 0 16px;overflow:hidden}.thumb{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:#333}.info{padding:12px}.title{font-size:17px;font-weight:bold;line-height:1.35}.channel{color:#aaa;margin:7px 0 10px}.watch{background:#e00;color:#fff;border:0;border-radius:7px;padding:10px 14px;font-weight:bold}.chips{display:flex;gap:8px;overflow:auto;margin-top:12px}.chips button{white-space:nowrap;border:1px solid #555;background:#222;color:#fff;border-radius:20px;padding:8px 14px}
+</style>
+</head>
+<body>
+<header><h1>▶ BiswaTube</h1><div class="row"><input id="q" placeholder="Search YouTube videos"><button onclick="search()">SEARCH</button></div><div class="chips">
+<button onclick="setQ('Music')">Music</button><button onclick="setQ('Gaming')">Gaming</button><button onclick="setQ('Movies')">Movies</button><button onclick="setQ('Sports')">Sports</button><button onclick="setQ('Funny')">Funny</button>
+</div></header>
+<main id="results"><div class="msg">Search YouTube videos directly inside BiswaTube.</div></main>
+<script>
+const API_KEY='PUT_YOUR_YOUTUBE_API_KEY_HERE';
+function setQ(x){document.getElementById('q').value=x;search()}
+async function search(){
+ const q=document.getElementById('q').value.trim(); if(!q)return;
+ const out=document.getElementById('results'); out.innerHTML='<div class="msg">Searching YouTube…</div>';
+ try{
+  const u=new URL('https://www.googleapis.com/youtube/v3/search');
+  u.searchParams.set('part','snippet');u.searchParams.set('type','video');u.searchParams.set('q',q);u.searchParams.set('maxResults','12');u.searchParams.set('key',API_KEY);
+  const r=await fetch(u);const data=await r.json();
+  if(!r.ok)throw new Error(data.error?.message||'YouTube API error');
+  out.innerHTML='';
+  (data.items||[]).forEach(v=>{
+   const id=v.id.videoId,s=v.snippet;
+   const card=document.createElement('div');card.className='card';
+   card.innerHTML='<img class="thumb" src="'+(s.thumbnails.high?.url||s.thumbnails.medium?.url||'')+'"><div class="info"><div class="title"></div><div class="channel"></div><button class="watch">▶ WATCH</button></div>';
+   card.querySelector('.title').textContent=s.title;card.querySelector('.channel').textContent=s.channelTitle;
+   card.querySelector('.watch').onclick=()=>{location.href='https://www.youtube.com/embed/'+id+'?autoplay=1'};
+   out.appendChild(card);
+  });
+  if(!data.items?.length)out.innerHTML='<div class="msg">No videos found.</div>';
+ }catch(e){out.innerHTML='<div class="msg">Search failed: '+e.message+'</div>'}
+}
+</script>
+</body></html>
