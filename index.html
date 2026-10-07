@@ -58,7 +58,7 @@ main{padding:0 0 92px;max-width:1050px;margin:auto}.msg{padding:32px 18px;color:
   <div class="playerbar"><div class="playerbrand">▶ <span>Biswa</span>Tube</div><button class="close" onclick="closePlayer()">✕</button></div>
   <div class="video-wrap"><iframe id="frame" class="frame" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen></iframe></div>
   <div class="player-info"><div id="playerTitle" class="player-title">BiswaTube Player</div><div id="playerChannel" class="player-channel"></div></div>
-  <div class="player-actions"><button class="pbtn">👍 Like</button><button class="pbtn">↗ Share</button><button class="pbtn">🔖 Save</button><button class="pbtn">▶ Subscribe</button></div>
+  <div class="player-actions"><button id="likeBtn" class="pbtn" onclick="toggleLike(this)">♡ Like</button><button class="pbtn" onclick="shareCurrent()">↗ Share</button><button class="pbtn" onclick="saveCurrent()">🔖 Save</button><button class="pbtn" onclick="subscribeCurrent()">▶ More from channel</button></div>
   <div class="suggest-title">Suggested Videos</div>
   <div id="suggestions" class="suggest-grid"></div>
 </div>
@@ -94,6 +94,58 @@ function isMovieLongStory(v){
   const hasNegative=negative.some(x=>s.includes(x));
   return hasPositive && !hasNegative;
 }
+function focusFind(){
+  const q=document.getElementById('q');
+  q.focus();q.select();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function searchType(q){document.getElementById('q').value=q;search()}
+function toggleLike(btn){
+  const id=btn.dataset.videoId;
+  const key='biswa_liked_'+id;
+  const liked=localStorage.getItem(key)==='1';
+  localStorage.setItem(key,liked?'0':'1');
+  btn.textContent=liked?'♡ Like':'♥ Liked';
+}
+function saveCurrent(){
+  const id=document.getElementById('frame').dataset.videoId;
+  const title=document.getElementById('playerTitle').textContent;
+  if(!id)return;
+  const saved=JSON.parse(localStorage.getItem('biswa_saved')||'[]');
+  const i=saved.findIndex(x=>x.id===id);
+  if(i>=0){saved.splice(i,1);alert('Removed from Saved');}
+  else{saved.unshift({id,title});localStorage.setItem('biswa_saved',JSON.stringify(saved));alert('Saved to My List');return}
+  localStorage.setItem('biswa_saved',JSON.stringify(saved));
+}
+async function shareCurrent(){
+  const id=document.getElementById('frame').dataset.videoId;
+  const title=document.getElementById('playerTitle').textContent;
+  const url='https://www.youtube.com/watch?v='+id;
+  try{
+    if(navigator.share) await navigator.share({title,text:title,url});
+    else {await navigator.clipboard.writeText(url);alert('Movie link copied');}
+  }catch(e){}
+}
+function subscribeCurrent(){
+  const ch=document.getElementById('playerChannel').textContent;
+  if(ch) searchType(ch+' full movie');
+}
+function showSaved(){
+  document.getElementById('home').style.display='none';
+  const out=document.getElementById('results');
+  const saved=JSON.parse(localStorage.getItem('biswa_saved')||'[]');
+  out.innerHTML='<div class="section">🔖 My Saved Movies</div>';
+  if(!saved.length){out.innerHTML+='<div class="msg">No saved movies yet. Open a movie and tap Save.</div>';return}
+  const grid=document.createElement('div');grid.className='grid';
+  saved.forEach(x=>{
+    const c=document.createElement('div');c.className='card';
+    c.innerHTML='<div class="info"><div class="title"></div><button class="watch">▶ WATCH</button></div>';
+    c.querySelector('.title').textContent=x.title;
+    c.onclick=()=>openPlayer(x.id,x.title,'');
+    grid.appendChild(c);
+  });
+  out.appendChild(grid);
+}
 function renderSuggestions(currentId){
   const box=document.getElementById('suggestions'); if(!box)return; box.innerHTML='';
   currentItems.filter(v=>v.id.videoId!==currentId).slice(0,8).forEach(v=>{
@@ -105,6 +157,7 @@ function renderSuggestions(currentId){
   });
 }
 function openPlayer(id,title='',channel=''){
+      document.getElementById('frame').dataset.videoId=id;
       document.getElementById('frame').src='https://www.youtube.com/embed/'+id+'?autoplay=1&rel=0';
       document.getElementById('playerTitle').textContent=title||'BiswaTube Player';
       document.getElementById('playerChannel').textContent=channel||'';
