@@ -70,7 +70,7 @@ let currentItems=[];
 function showHome(){document.getElementById('home').style.display='block';document.getElementById('results').style.display='block';window.scrollTo({top:0,behavior:'smooth'})}
 function setQ(x){document.getElementById('q').value=x;search()}
 
-const HOME_QUERIES=['new full movie Hollywood','new full movie Bollywood','new South Indian full movie','new Bangla full movie','new Hindi full movie','new long story movie','new Malayalam full movie'];
+const HOME_QUERIES=['new full movie Hollywood Bollywood South Bangla Hindi long story'];
 async function loadHome(){
   const box=document.getElementById('homeMovies');
   try{
