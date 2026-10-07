@@ -8,7 +8,7 @@ import java.net.URL
 data class VideoItem(val id:String,val title:String,val channel:String,val thumbnail:String)
 
 object YouTubeApi {
-    const val API_KEY = AIzaSyCQ8VNJfhh09RYpzh1v2b_iWO0HPNcb1Hc
+    const val API_KEY = "AIzaSyCQ8VNJfhh09RYpzh1v2b_iWO0HPNcb1Hc"
 
     fun search(query:String,maxResults:Int=10):List<VideoItem> {
         if (API_KEY.startsWith("PUT_")) throw IllegalStateException("YouTube API key is not set")
