@@ -8,8 +8,8 @@
 *{box-sizing:border-box}body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial,sans-serif}
 header{position:sticky;top:0;background:#111;padding:16px;z-index:5;border-bottom:1px solid #222}h1{margin:0 0 12px;font-size:28px}
 .row{display:flex;gap:8px}.row input{flex:1;padding:13px;border:0;border-radius:8px;background:#292929;color:#fff;font-size:16px;outline:none}.row button{padding:0 16px;border:0;border-radius:8px;background:#e00000;color:#fff;font-weight:bold}
-.chips{display:flex;gap:8px;overflow:auto;margin-top:12px}.chips button{white-space:nowrap;border:1px solid #555;background:#222;color:#fff;border-radius:20px;padding:8px 14px}
-main{padding:16px;max-width:900px;margin:auto}.msg{padding:32px 5px;color:#aaa}.section{font-size:21px;font-weight:bold;margin:8px 0 14px}
+.chips{display:flex;gap:8px;overflow:auto;margin-top:12px}.chips button{white-space:nowrap;border:1px solid #555;background:#222;color:#fff;border-radius:20px;padding:8px 14px}.chips button:first-child{background:#e00000;border-color:#e00000}
+main{padding:16px;max-width:900px;margin:auto}.msg{padding:32px 5px;color:#aaa}.hero{background:linear-gradient(135deg,#241010,#111);border:1px solid #2b2020;border-radius:18px;padding:24px;margin-bottom:24px}.hero-title{font-size:30px;font-weight:900}.hero-sub{color:#aaa;margin-top:8px}.home-section{margin-bottom:28px}.section{font-size:21px;font-weight:bold;margin:8px 0 14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{background:#181818;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px #000}
 .thumb{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:#333}.info{padding:12px}.title{font-size:16px;font-weight:bold;line-height:1.35}.channel{color:#aaa;margin:7px 0 10px;font-size:13px}.watch{background:#e00000;color:#fff;border:0;border-radius:7px;padding:9px 13px;font-weight:bold}
 #player{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);z-index:20;overflow:auto;padding:18px}
@@ -34,10 +34,17 @@ main{padding:16px;max-width:900px;margin:auto}.msg{padding:32px 5px;color:#aaa}.
 <h1>▶ BiswaTube</h1>
 <div class="row"><input id="q" placeholder="Search YouTube videos" onkeydown="if(event.key==='Enter')search()"><button onclick="search()">SEARCH</button></div>
 <div class="chips">
-<button onclick="setQ('full movie')">Full Movies</button><button onclick="setQ('long story')">Long Stories</button><button onclick="setQ('Hindi full movie')">Hindi Movies</button><button onclick="setQ('Bangla full movie')">Bangla Movies</button><button onclick="setQ('Nepali full movie')">Nepali Movies</button>
+<button onclick="location.hash='home';document.getElementById('home').scrollIntoView()">Home</button><button onclick="setQ('Hollywood full movie')">Hollywood</button><button onclick="setQ('Bollywood full movie')">Bollywood</button><button onclick="setQ('South Indian full movie')">South</button><button onclick="setQ('Bangla full movie')">Bangla</button><button onclick="setQ('Hindi full movie')">Hindi</button><button onclick="setQ('long story')">Long Stories</button>
 </div>
 </header>
-<main id="results"><div class="msg">BiswaTube is ready. Search for a video.</div></main>
+<main>
+<section id="home">
+  <div class="hero"><div class="hero-title">🎬 Discover Movies</div><div class="hero-sub">Hollywood • Bollywood • South • Bangla • Hindi • Long Stories</div></div>
+  <div class="section">🔥 New & Popular Movies</div>
+  <div id="homeMovies" class="grid"><div class="msg">Loading movies…</div></div>
+</section>
+<section id="results"><div class="msg">Search for a movie or long story.</div></section>
+</main>
 <div id="player">
 <div class="playerbox">
   <div class="playerbar"><div class="playerbrand">▶ <span>Biswa</span>Tube</div><button class="close" onclick="closePlayer()">✕</button></div>
@@ -53,6 +60,18 @@ const API_KEY='AIzaSyBkmGRMcQog-vOPIJye4ne1ssg3qGeYQDw';
 
 let currentItems=[];
 function setQ(x){document.getElementById('q').value=x;search()}
+const HOME_QUERIES=['new full movie Hollywood','new full movie Bollywood','new South Indian full movie','new Bangla full movie','new Hindi full movie','new long story movie'];
+async function loadHome(){
+  const box=document.getElementById('homeMovies');
+  try{
+    const batches=await Promise.all(HOME_QUERIES.map(q=>api(q,4)));
+    const all=batches.flat().filter(isMovieLongStory);
+    const seen=new Set(); const unique=all.filter(v=>{const id=v.id.videoId;if(seen.has(id))return false;seen.add(id);return true});
+    box.innerHTML='';
+    unique.slice(0,18).forEach(v=>box.appendChild(card(v)));
+    if(!unique.length)box.innerHTML='<div class="msg">No movie suggestions found right now.</div>';
+  }catch(e){box.innerHTML='<div class="msg">Could not load movie suggestions. Search is still available.</div>'}
+}
 function movieQuery(q){
   const clean=q.trim();
   return clean+' (movie OR film OR "full movie" OR "full film" OR "long story" OR story) -song -music -shorts -short -gaming -game -sports -football -cricket -funny';
@@ -108,5 +127,6 @@ function render(title,items){
  const grid=document.createElement('div');grid.className='grid';items.forEach(v=>grid.appendChild(card(v)));out.appendChild(grid);
  if(!items.length)out.innerHTML+='<div class="msg">No videos found.</div>'
 }
+loadHome();
 </script>
 </body></html>
