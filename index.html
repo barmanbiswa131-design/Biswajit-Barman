@@ -34,7 +34,7 @@ main{padding:16px;max-width:900px;margin:auto}.msg{padding:32px 5px;color:#aaa}.
 <h1>▶ BiswaTube</h1>
 <div class="row"><input id="q" placeholder="Search YouTube videos" onkeydown="if(event.key==='Enter')search()"><button onclick="search()">SEARCH</button></div>
 <div class="chips">
-<button onclick="setQ('popular music')">Music</button><button onclick="setQ('gaming')">Gaming</button><button onclick="setQ('popular movies trailers')">Movies</button><button onclick="setQ('sports highlights')">Sports</button><button onclick="setQ('funny videos')">Funny</button>
+<button onclick="setQ('full movie')">Full Movies</button><button onclick="setQ('long story')">Long Stories</button><button onclick="setQ('Hindi full movie')">Hindi Movies</button><button onclick="setQ('Bangla full movie')">Bangla Movies</button><button onclick="setQ('Nepali full movie')">Nepali Movies</button>
 </div>
 </header>
 <main id="results"><div class="msg">BiswaTube is ready. Search for a video.</div></main>
@@ -53,6 +53,18 @@ const API_KEY='AIzaSyBkmGRMcQog-vOPIJye4ne1ssg3qGeYQDw';
 
 let currentItems=[];
 function setQ(x){document.getElementById('q').value=x;search()}
+function movieQuery(q){
+  const clean=q.trim();
+  return clean+' (movie OR film OR "full movie" OR "full film" OR "long story" OR story) -song -music -shorts -short -gaming -game -sports -football -cricket -funny';
+}
+function isMovieLongStory(v){
+  const s=(v.snippet.title+' '+v.snippet.description+' '+v.snippet.channelTitle).toLowerCase();
+  const positive=['movie','film','full movie','full film','long story','story','cinema'];
+  const negative=['#shorts','shorts','song','official music','lyric','lyrics','gaming','gameplay','football','cricket','sports','funny clip'];
+  const hasPositive=positive.some(x=>s.includes(x));
+  const hasNegative=negative.some(x=>s.includes(x));
+  return hasPositive && !hasNegative;
+}
 function renderSuggestions(currentId){
   const box=document.getElementById('suggestions'); if(!box)return; box.innerHTML='';
   currentItems.filter(v=>v.id.videoId!==currentId).slice(0,8).forEach(v=>{
@@ -88,7 +100,7 @@ async function api(q,max=12){
 async function search(){
  const q=document.getElementById('q').value.trim();if(!q)return;
  const out=document.getElementById('results');out.innerHTML='<div class="msg">Searching YouTube…</div>';
- try{const items=await api(q);render('Search results',items)}catch(e){out.innerHTML='<div class="msg">Search failed: '+(e.name==='AbortError'?'Request timed out. Check the API key and restrictions.':e.message)+'</div>'}
+ try{const raw=await api(movieQuery(q));const items=raw.filter(isMovieLongStory);render('Movies & Long Stories',items)}catch(e){out.innerHTML='<div class="msg">Search failed: '+(e.name==='AbortError'?'Request timed out. Check the API key and restrictions.':e.message)+'</div>'}
 }
 function render(title,items){
  currentItems=items;
